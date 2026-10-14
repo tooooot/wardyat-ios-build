@@ -1,0 +1,66 @@
+name: iOS simulator check
+
+# Builds each app without signing, runs it on an iPhone simulator and saves screenshots.
+# Works without an Apple Developer membership.
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'App to check'
+        type: choice
+        options: [petro]
+        default: petro
+
+jobs:
+  check:
+    runs-on: macos-15
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [petro]
+    steps:
+      - name: Skip if not selected
+        if: inputs.app != 'all' && inputs.app != matrix.app
+        run: echo "skipping ${{ matrix.app }}"
+
+      - uses: actions/checkout@v4
+        if: inputs.app == 'all' || inputs.app == matrix.app
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: inputs.app == 'all' || inputs.app == matrix.app
+        with:
+          xcode-version: latest-stable
+
+      - name: Build for simulator (unsigned)
+        if: inputs.app == 'all' || inputs.app == matrix.app
+        run: |
+          xcodebuild -project apps/${{ matrix.app }}/ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath DD \
+            CODE_SIGNING_ALLOWED=NO build | xcbeautify || exit ${PIPESTATUS[0]}
+
+      - name: Run on iPhone simulator and screenshot
+        if: inputs.app == 'all' || inputs.app == matrix.app
+        run: |
+          APP=DD/Build/Products/Debug-iphonesimulator/App.app
+          BID=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Info.plist")
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          devs=[x for k,v in d.items() if 'iOS' in k for x in v]
+          pick=[x for x in devs if 'Pro Max' in x['name']] or [x for x in devs if 'iPhone' in x['name']]
+          print(pick[-1]['udid'])")
+          xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" "$BID"
+          mkdir -p shots
+          for t in 8 25 45; do sleep $((t - ${prev:-0})); prev=$t
+            xcrun simctl io "$UDID" screenshot "shots/${{ matrix.app }}_${t}s.png"; done
+          xcrun simctl spawn "$UDID" launchctl list | grep -q "$BID" && echo "✅ app still running after 45s" || { echo "❌ app is not running (crashed?)"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        if: always() && (inputs.app == 'all' || inputs.app == matrix.app)
+        with:
+          name: shots-${{ matrix.app }}
+          path: shots/
+          if-no-files-found: ignore

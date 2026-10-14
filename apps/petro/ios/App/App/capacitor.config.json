@@ -1,0 +1,24 @@
+{
+	"appId": "net.wardyat.petro",
+	"appName": "ورديات بترو",
+	"webDir": "dist",
+	"ios": {
+		"contentInset": "always",
+		"backgroundColor": "#ffffff",
+		"includePlugins": [
+			"@capgo/capacitor-social-login",
+			"@capacitor/local-notifications"
+		]
+	},
+	"android": {
+		"includePlugins": [
+			"@capgo/capacitor-social-login",
+			"@capacitor/local-notifications",
+			"@capacitor/push-notifications"
+		]
+	},
+	"packageClassList": [
+		"SocialLoginPlugin",
+		"LocalNotificationsPlugin"
+	]
+}

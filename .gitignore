@@ -1,0 +1,8 @@
+*.p8
+*.jks
+*.p12
+*.mobileprovision
+keys/
+DD/
+build/
+xcuserdata/
