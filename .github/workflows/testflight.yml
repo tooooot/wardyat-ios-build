@@ -7,7 +7,7 @@ on:
     inputs:
       app:
         type: choice
-        options: [petro]
+        options: [petro, dalleni]
       upload:
         description: 'Upload to App Store Connect (needs the app record created first). Off = build only.'
         type: boolean

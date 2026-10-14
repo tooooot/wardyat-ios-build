@@ -1,0 +1,24 @@
+{
+	"appId": "net.wardyat.dalleni",
+	"appName": "معلم",
+	"webDir": "www",
+	"server": {
+		"url": "https://dalleni.wardyat.net",
+		"errorPath": "offline.html",
+		"allowNavigation": [
+			"dalleni.wardyat.net"
+		]
+	},
+	"android": {
+		"includePlugins": [
+			"@capacitor-community/background-geolocation",
+			"@capacitor/push-notifications",
+			"@capacitor/local-notifications"
+		]
+	},
+	"ios": {
+		"includePlugins": []
+	},
+	"appendUserAgent": "DalleniApp/1",
+	"packageClassList": []
+}
